@@ -1,0 +1,180 @@
+# Despliegue a producción: CI → plan → aprobación manual → apply → web → caché.
+#
+# Configuración del repositorio (Settings → Secrets and variables → Actions → Variables):
+#   AWS_DEPLOY_ROLE_ARN  salida deploy_role_arn del bootstrap
+#   TF_STATE_BUCKET      salida state_bucket del bootstrap
+#   AWS_REGION           región (opcional, us-east-1 por defecto)
+# Y un entorno "production" con revisores obligatorios.
+# No hay secrets: la autenticación en AWS es por OIDC, sin claves estáticas.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "samples/**"
+      - "LICENSE"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un despliegue cada vez y sin cancelar uno a medias.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  TF_VERSION: "1.17.1"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_DIR: infrastructure/environments/prod
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  TF_VAR_aws_region: ${{ vars.AWS_REGION || 'us-east-1' }}
+  TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  plan:
+    name: Terraform plan
+    needs: ci
+    # Sin las variables del bootstrap (p. ej. en un fork o sin AWS conectado) el
+    # despliegue se salta en lugar de fallar; el CI se ejecuta igualmente.
+    if: vars.AWS_DEPLOY_ROLE_ARN != '' && vars.TF_STATE_BUCKET != ''
+    runs-on: ubuntu-latest
+    # Sin entorno: el token OIDC lleva sub = repo:<owner>/<repo>:ref:refs/heads/main.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: gha-plan-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: >-
+          terraform init -lockfile=readonly
+          -backend-config="bucket=${TF_STATE_BUCKET}"
+          -backend-config="region=${AWS_REGION}"
+
+      - name: terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform plan -lock-timeout=5m -out=tfplan -no-color
+
+      - name: Resumen del plan
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          {
+            echo "## Terraform plan"
+            echo '```'
+            terraform show -no-color tfplan | grep -E '^(Plan:|No changes|  # )' || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # El plan guardado referencia los zip de las Lambdas (build/): viajan juntos
+      # para que el apply despliegue exactamente lo que se aprobó.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tfplan
+          path: |
+            ${{ env.TF_DIR }}/tfplan
+            ${{ env.TF_DIR }}/build/
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy:
+    name: Apply y publicación
+    needs: plan
+    runs-on: ubuntu-latest
+    # El entorno exige aprobación manual. El token OIDC lleva
+    # sub = repo:<owner>/<repo>:environment:production.
+    environment:
+      name: production
+      url: ${{ steps.publish.outputs.site_url }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: gha-deploy-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: tfplan
+          path: ${{ env.TF_DIR }}
+
+      - name: terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: >-
+          terraform init -lockfile=readonly
+          -backend-config="bucket=${TF_STATE_BUCKET}"
+          -backend-config="region=${AWS_REGION}"
+
+      # Aplica el plan aprobado. Si el estado cambió desde el plan, Terraform lo
+      # rechaza ("saved plan is stale") y hay que relanzar el workflow.
+      - name: terraform apply
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply -lock-timeout=5m -no-color tfplan
+
+      - name: Leer salidas
+        id: outputs
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          echo "frontend_bucket=$(terraform output -raw frontend_bucket)" >> "$GITHUB_OUTPUT"
+          echo "distribution_id=$(terraform output -raw distribution_id)" >> "$GITHUB_OUTPUT"
+          echo "site_url=$(terraform output -raw site_url)" >> "$GITHUB_OUTPUT"
+
+      # config.js lo gestiona Terraform: se excluye para que --delete no lo borre.
+      # Caché de 5 min en navegador y CloudFront; la invalidación publica el cambio al momento.
+      - name: Publicar la web
+        id: publish
+        env:
+          BUCKET: ${{ steps.outputs.outputs.frontend_bucket }}
+          SITE_URL: ${{ steps.outputs.outputs.site_url }}
+        run: |
+          aws s3 sync frontend/ "s3://${BUCKET}" --delete --exclude config.js \
+            --cache-control "public, max-age=300" --only-show-errors
+          echo "site_url=${SITE_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Invalidar la caché de CloudFront
+        env:
+          DISTRIBUTION_ID: ${{ steps.outputs.outputs.distribution_id }}
+        run: |
+          aws cloudfront create-invalidation --distribution-id "${DISTRIBUTION_ID}" --paths '/*' \
+            --query 'Invalidation.Id' --output text
+
+      - name: Resumen
+        env:
+          SITE_URL: ${{ steps.outputs.outputs.site_url }}
+        run: echo "Desplegado en ${SITE_URL}" >> "$GITHUB_STEP_SUMMARY"

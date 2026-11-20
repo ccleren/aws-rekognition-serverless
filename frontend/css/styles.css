@@ -1,0 +1,1029 @@
+/* ==========================================================================
+   Estilos de la aplicación
+   Paleta sobria con un único acento (verde azulado), tema claro/oscuro por
+   prefers-color-scheme con conmutador manual (atributo data-theme).
+   Sin fuentes externas: tipografía del sistema.
+   ========================================================================== */
+
+:root {
+  --bg: #f3f2ed;
+  --surface: #ffffff;
+  --surface-2: #f7f6f2;
+  --border: #dedbd2;
+  --border-strong: #9a968c;
+  --text: #1b1d1f;
+  --text-muted: #5b5f63;
+  --accent: #0d6b61;
+  --accent-strong: #0a564e;
+  --accent-soft: #e1efed;
+  --on-accent: #ffffff;
+  --track: #e6e3db;
+  --danger: #b3261e;
+  --danger-soft: #fbe9e7;
+  --chip: #e9e6de;
+  --stage: #eceae4;
+  --shadow: 0 1px 2px rgb(20 20 20 / 0.04);
+
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  color-scheme: light;
+}
+
+/* Tema oscuro: por preferencia del sistema salvo que se fuerce el claro… */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131516;
+    --surface: #1b1e20;
+    --surface-2: #212528;
+    --border: #32373a;
+    --border-strong: #6e757a;
+    --text: #e8eaeb;
+    --text-muted: #a5abaf;
+    --accent: #4fb8a9;
+    --accent-strong: #6fcabd;
+    --accent-soft: #1b3431;
+    --on-accent: #0b1a18;
+    --track: #2d3235;
+    --danger: #f2867d;
+    --danger-soft: #3a2220;
+    --chip: #2a2f32;
+    --stage: #0f1112;
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+
+/* …o porque se ha elegido con el conmutador. */
+:root[data-theme="dark"] {
+  --bg: #131516;
+  --surface: #1b1e20;
+  --surface-2: #212528;
+  --border: #32373a;
+  --border-strong: #6e757a;
+  --text: #e8eaeb;
+  --text-muted: #a5abaf;
+  --accent: #4fb8a9;
+  --accent-strong: #6fcabd;
+  --accent-soft: #1b3431;
+  --on-accent: #0b1a18;
+  --track: #2d3235;
+  --danger: #f2867d;
+  --danger-soft: #3a2220;
+  --chip: #2a2f32;
+  --stage: #0f1112;
+  --shadow: none;
+  color-scheme: dark;
+}
+
+/* --- Base ------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul {
+  margin: 0;
+}
+
+ol,
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -48px;
+  z-index: 10;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+/* --- Cabecera y pie ---------------------------------------------------------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 10px 40px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-logo {
+  flex: none;
+  color: var(--accent);
+}
+
+.brand-name {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.brand-tagline {
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.retention-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.retention-note svg {
+  flex: none;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  border-color: var(--border-strong);
+}
+
+/* El conmutador muestra la luna en claro y el sol en oscuro. */
+.icon-sun {
+  display: none;
+}
+
+:root[data-theme="dark"] .icon-sun {
+  display: block;
+}
+
+:root[data-theme="dark"] .icon-moon {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .icon-sun {
+    display: block;
+  }
+
+  :root:not([data-theme="light"]) .icon-moon {
+    display: none;
+  }
+}
+
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: auto;
+  padding: 18px 40px 22px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.app-footer a {
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+/* --- Espacio de trabajo -------------------------------------------------------- */
+
+.workspace {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 40px 56px;
+}
+
+.workspace:focus {
+  outline: none;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.notice {
+  margin-bottom: 24px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.notice-error {
+  background: var(--danger-soft);
+  color: var(--text);
+  border: 1px solid var(--danger);
+}
+
+/* --- Reposo ----------------------------------------------------------------- */
+
+.view-idle {
+  display: grid;
+  grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.view-idle h1 {
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.lead {
+  max-width: 72ch;
+  margin-top: 14px;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 340px;
+  margin-top: 24px;
+  padding: 32px 24px;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone.is-dragover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.dropzone:focus-visible {
+  outline-offset: 4px;
+}
+
+.dropzone-icon {
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.dropzone-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.dropzone-hint {
+  color: var(--text-muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chips li {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--chip);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.field-error {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.how-it-works {
+  padding: 24px;
+}
+
+.how-it-works h2 {
+  font-size: 16px;
+}
+
+.steps {
+  display: grid;
+  gap: 20px;
+  margin-top: 22px;
+}
+
+.steps li {
+  display: flex;
+  gap: 14px;
+}
+
+.step-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.steps h3 {
+  font-size: 15px;
+}
+
+.steps p {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.privacy-note {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* --- Trabajo: barra de estado --------------------------------------------------- */
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.status-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.status-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.status-icon.is-error {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.status-icon.is-busy::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Título y datos en una línea; si no caben, los datos (p. ej. un nombre de
+   archivo largo) se recortan con "…" y los botones se quedan a la derecha. */
+.status-text {
+  display: flex;
+  align-items: baseline;
+  gap: 2px 12px;
+  min-width: 0;
+}
+
+.status-title {
+  flex: none;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+/* Recibe el foco por programa (tabindex="-1") para que el lector de pantalla
+   lea el nuevo estado; no es interactivo, así que no se dibuja el anillo. */
+.status-title:focus {
+  outline: none;
+}
+
+.status-meta {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.button-secondary {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.button-secondary:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+/* --- Trabajo: rejilla ---------------------------------------------------------------- */
+
+.work-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.preview {
+  padding: 16px;
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  border-radius: var(--radius);
+  background: var(--stage);
+  overflow: hidden;
+}
+
+/* El contenedor se ajusta al tamaño mostrado de la imagen: las cajas se colocan
+   en porcentaje sobre él, así que siguen a la imagen al redimensionar. */
+.stage-inner {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.stage-inner img {
+  display: block;
+  max-width: 100%;
+  max-height: 62vh;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.boxes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.box {
+  position: absolute;
+  border: 1.5px dashed rgb(255 255 255 / 0.95);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
+  transition: opacity 0.15s ease;
+}
+
+.boxes.has-active .box {
+  opacity: 0.35;
+}
+
+.boxes.has-active .box.is-active {
+  opacity: 1;
+  border: 2.5px solid var(--accent);
+  background: rgb(13 107 97 / 0.14);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.6);
+}
+
+.box-tag {
+  position: absolute;
+  left: -2.5px;
+  bottom: 100%;
+  margin-bottom: 4px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  display: none;
+}
+
+.box.is-active .box-tag {
+  display: block;
+}
+
+/* Cuando la caja toca el borde superior, la etiqueta va dentro (decidido con ResizeObserver). */
+.box.tag-inside .box-tag {
+  bottom: auto;
+  top: 2px;
+  left: 2px;
+  margin: 0;
+}
+
+.video-wrap video {
+  display: block;
+  width: 100%;
+  max-height: 62vh;
+  border-radius: var(--radius);
+  background: #000;
+}
+
+.timeline {
+  margin-top: 14px;
+}
+
+.timeline-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--track);
+}
+
+.timeline-progress,
+.timeline-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 999px;
+}
+
+.timeline-progress {
+  width: 0;
+  background: var(--accent);
+}
+
+.timeline-range {
+  background: var(--accent-soft);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.timeline-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+}
+
+.timeline-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+}
+
+.preview-footer:empty {
+  display: none;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid var(--accent);
+  border-radius: 3px;
+}
+
+/* --- Panel lateral -------------------------------------------------------------------- */
+
+.side-panel {
+  padding: 22px 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.panel-title {
+  font-size: 16px;
+}
+
+.panel-subtitle {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.progress-steps {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.progress-steps li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.progress-dot {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+}
+
+.progress-steps li.is-active .progress-dot {
+  border-color: var(--accent);
+  border-right-color: transparent;
+  animation: spin 0.9s linear infinite;
+}
+
+.progress-steps li.is-done .progress-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface);
+}
+
+.progress-steps li.is-failed .progress-dot {
+  border-color: var(--danger);
+  background: var(--danger);
+  box-shadow: inset 0 0 0 3px var(--surface);
+}
+
+.progress-label {
+  font-weight: 600;
+}
+
+.progress-detail {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.upload-bar {
+  height: 6px;
+  margin-top: 22px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.upload-bar-fill {
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.label-list {
+  display: grid;
+  gap: 2px;
+}
+
+/* En escritorio la lista se desplaza dentro del panel: con muchas etiquetas,
+   la vista previa sigue a la vista mientras se recorren. */
+@media (min-width: 1001px) {
+  .label-list {
+    max-height: max(280px, calc(100vh - 340px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+}
+
+.label-row {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.label-row:hover,
+.label-row.is-active {
+  background: var(--accent-soft);
+}
+
+.label-row[aria-pressed="true"] .label-name {
+  font-weight: 700;
+}
+
+.label-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.label-name {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.label-boxes {
+  margin-left: 4px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.label-value {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  display: block;
+  position: relative;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.empty-state,
+.panel-note {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.panel-note {
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.error-message {
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+.error-help {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.error-help:empty {
+  display: none;
+}
+
+/* --- Animación ------------------------------------------------------------------------- */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Responsive ------------------------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  .brand-tagline,
+  .retention-note {
+    display: none;
+  }
+
+  .view-idle,
+  .work-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header,
+  .app-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .workspace {
+    padding: 24px 16px 40px;
+  }
+
+  .view-idle h1 {
+    font-size: 23px;
+  }
+
+  .dropzone {
+    min-height: 260px;
+  }
+
+  .stage {
+    min-height: 0;
+  }
+
+  .status-text {
+    flex-wrap: wrap;
+  }
+
+  .status-meta {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .status-actions,
+  .status-actions .button {
+    width: 100%;
+  }
+}

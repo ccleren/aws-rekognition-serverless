@@ -1,0 +1,4 @@
+# Solo para tests y desarrollo local. Las Lambdas no tienen dependencias:
+# boto3 viene incluido en el runtime de Python de AWS Lambda.
+boto3==1.43.123
+pytest==9.2.0

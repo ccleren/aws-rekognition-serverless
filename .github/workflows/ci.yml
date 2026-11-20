@@ -1,0 +1,101 @@
+# Comprobaciones de cada pull request (y paso previo del despliegue).
+# No necesita AWS: Terraform se valida sin backend y los tests usan dobles.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_VERSION: "1.17.1"
+  PYTHON_VERSION: "3.12" # igual que el runtime de las Lambdas
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  terraform:
+    name: Terraform fmt y validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [infrastructure/bootstrap, infrastructure/environments/prod]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt -check
+        run: terraform fmt -check -recursive -diff infrastructure
+
+      # -lockfile=readonly: falla si el .terraform.lock.hcl versionado no cubre los providers.
+      - name: terraform init (sin backend)
+        working-directory: ${{ matrix.root }}
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: terraform validate
+        working-directory: ${{ matrix.root }}
+        run: terraform validate -no-color
+
+  tests:
+    name: Tests del backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias de test
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: pytest
+        run: python -m pytest
+
+  frontend:
+    name: Reglas del frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # La CSP de CloudFront es estricta: estas reglas evitan regresiones que la romperían.
+      - name: Sin estilos en línea, innerHTML, eval ni recursos externos
+        run: |
+          set -u
+          fail=0
+          if grep -nE '\sstyle=' frontend/index.html; then echo "::error::Atributo style en el HTML"; fail=1; fi
+          if grep -rnE 'innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function' frontend/js --include=*.js | grep -v '^\S*:[0-9]*:\s*//'; then
+            echo "::error::API de inserción de HTML o evaluación de código"; fail=1
+          fi
+          if grep -rnE '<(script|link)[^>]+(src|href)="(https?:)?//' frontend/index.html; then echo "::error::Recurso externo en el HTML"; fail=1; fi
+          if grep -rnE 'console\.log' frontend/js; then echo "::error::console.log en el frontend"; fail=1; fi
+          if [ -f frontend/config.js ]; then echo "::error::frontend/config.js no debe versionarse"; fail=1; fi
+          exit $fail
+
+      - name: Integridad de jsPDF autoalojado
+        run: echo "e6551fcdc32f09d6853b2c5126d18d01d9447e0da618a41a11ebeee0f6c20d54  frontend/vendor/jspdf/jspdf.umd.min.js" | sha256sum -c -
+
+      - name: Sintaxis de los módulos JavaScript
+        run: |
+          for file in frontend/js/*.js; do
+            node --input-type=module --check < "$file" || { echo "::error file=$file::Error de sintaxis"; exit 1; }
+          done

@@ -1,0 +1,14 @@
+# Copia este fichero como terraform.tfvars (no se versiona) y rellena los marcadores.
+
+aws_region   = "us-east-1"
+project_name = "vision-lab" # debe coincidir con project_name del entorno prod
+
+github_owner = "<github-owner>"
+github_repo  = "aws-rekognition-serverless"
+
+# Rama (job de plan) y entorno con aprobación manual (job de apply) que pueden asumir el rol.
+github_branch      = "main"
+github_environment = "production"
+
+# Pon false si la cuenta ya tiene el proveedor OIDC de GitHub (solo puede haber uno).
+create_oidc_provider = true

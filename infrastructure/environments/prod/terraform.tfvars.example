@@ -1,0 +1,27 @@
+# Ejemplo de valores. Copia como terraform.tfvars (no se versiona) solo si
+# quieres cambiar los valores por defecto; ninguno es sensible.
+
+aws_region   = "us-east-1"
+project_name = "vision-lab" # igual que en infrastructure/bootstrap
+app_name     = "Vision Lab"
+
+# Subida y análisis
+max_upload_bytes = 4194304 # 4 MiB
+min_confidence   = 75
+max_labels       = 25
+
+# Polling del frontend
+poll_image_timeout_seconds = 60
+poll_video_timeout_seconds = 900
+
+# Retención y coste
+data_retention_days          = 1
+log_retention_days           = 14
+api_throttle_rate            = 5
+api_throttle_burst           = 10
+process_reserved_concurrency = null # p. ej. 5 si la cuota de la cuenta lo permite
+price_class                  = "PriceClass_100"
+force_destroy                = true # false si guardas datos reales
+
+# Desarrollo local del frontend (CORS del API y de los resultados)
+extra_allowed_origins = [] # p. ej. ["http://localhost:8080"]

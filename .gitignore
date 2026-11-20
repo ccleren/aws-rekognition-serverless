@@ -1,0 +1,56 @@
+# --- Frontend ---------------------------------------------------------------
+# Lo genera Terraform (templatefile) con los endpoints reales: nunca se versiona.
+frontend/config.js
+
+# --- Terraform --------------------------------------------------------------
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+# Valores reales de variables: solo se versiona el ejemplo.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+# OJO: .terraform.lock.hcl SÍ se versiona (fija las versiones de los providers).
+
+# --- Empaquetado de Lambdas -------------------------------------------------
+build/
+*.zip
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# --- Ficheros de trabajo de la guía manual (pueden contener ARN/IDs reales) ---
+lifecycle.json
+trust-*.json
+*-policy.json
+notification.json
+
+# --- Credenciales y entorno -------------------------------------------------
+.env
+.env.*
+*.pem
+.aws/
+
+# --- Editor / sistema operativo ---------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

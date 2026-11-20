@@ -1,0 +1,26 @@
+# Propuestas mensuales de actualización: las acciones están fijadas por SHA y
+# los providers por lock file, así que sin esto se quedarían atrás.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: terraform
+    directories:
+      - /infrastructure/bootstrap
+      - /infrastructure/environments/prod
+    schedule:
+      interval: monthly
+    groups:
+      providers:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
